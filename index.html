@@ -147,9 +147,10 @@
   <!-- 弹窗遮罩层和内容 -->
   <div id="popupOverlay" class="popup-overlay">
     <div class="popup-content">
-      <div class="popup-title">6月9日公告：</div>
+      <div class="popup-title">6月11日公告：</div>
       <div class="popup-text">
-<p>如遇下次打开不显示的情况请多刷新</p>
+        <p>新增了清空输入框按钮</p>
+        <p>如遇打开加载失败的情况请多刷新</p>
         <p>本站将于6月16日停止维护，届时将禁止访问</p>
       </div>
       <div class="popup-title">使用须知：</div>
@@ -172,6 +173,7 @@
   <div class="search-box">
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="输入关键字搜索(大小写通用)">
+      <button id="clearButton" style="width: 60px;margin-right: 10;">清空</button>
     </div>
   </div>
 
@@ -654,6 +656,13 @@
       } else {
         document.getElementById('popupOverlay').style.display = 'none';
       }
+    });
+
+    // 清除按钮点击事件
+    document.getElementById('clearButton').addEventListener('click', function () {
+      const searchInput = document.getElementById('searchInput');
+      searchInput.value = '';
+      displayQuestions(); // 恢复显示全部题目
     });
   </script>
 
