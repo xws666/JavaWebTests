@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小稳神-JavaWeb网页版试题</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    ul {
+      padding: 0px 10px;
+      margin: 3px 10px;
+    }
+
+    .search-box {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 6px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .search-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .content {
+      margin-top: 60px;
+      padding: 10px;
+      padding-bottom: 40px;
+      /* 防止内容被底部遮挡 */
+    }
+
+    .question-card {
+      background: white;
+      border-radius: 8px;
+      padding: 7px 20px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .question-type {
+      font-weight: bold;
+      margin-bottom: 2px;
+      color: #444;
+    }
+
+    .answer {
+      margin-top: 0px;
+      color: green;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 2px;
+      background: #fff;
+      text-align: center;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      font-size: 15px;
+      color: #555;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    /* 弹窗样式 */
+    .popup-overlay {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80vw;
+      /* 宽度占视口的70% */
+      max-width: 600px;
+      /* 限制最大宽度，避免超宽 */
+      text-align: left;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
+
+
+    .popup-title {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .popup-text {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .popup-buttons {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    button {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 16vw;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 弹窗遮罩层和内容 -->
+  <div id="popupOverlay" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-title">6月9日公告：</div>
+      <div class="popup-text">
+<p>如遇下次打开不显示的情况请多刷新</p>
+        <p>本站将于6月16日停止维护，届时将禁止访问</p>
+      </div>
+      <div class="popup-title">使用须知：</div>
+      <div class="popup-text">
+        <p>1.本站试题仅供学习使用，严禁用于任何商业用途</p>
+        <p>2.请勿将本站内容用于考试作弊或其他不当行为</p>
+        <p>3.本站不对任何因使用本站内容而导致的后果负责</p>
+        <p>4.本站不收集用户个人信息，请勿提供任何个人信息</p>
+        <p>5.感谢理解与支持</p>
+      </div>
+      <label style="font-size: 13px;">
+        <input type="checkbox" id="noShowCheckbox"> 已仔细阅读并不再提示
+      </label>
+      <div class="popup-buttons" style="text-align: right; margin-top: 10px;">
+        <button onclick="closePopup()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-box">
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="输入关键字搜索...">
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="questionContainer"></div>
+  </div>
+
+  <!-- 固定底部文字 -->
+  <div class="footer">
+    <div>
+      ©2025 小稳神 | 备号未申请 | 仅供学习使用
+    </div>
+    <div>
+      联系邮箱：3253952854@qq.com
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        type: '单选题',
+        text: 'AOP中，切点使用的接口是',
+        options: ['BeforeAdvice', 'Pointcut', 'AfterAdvice', 'MethodInterceotor'],
+        answer: 'B'
+      },
+      {
+        type: '单选题',
+        text: '在SpringMVc中，以下描述错误的是',
+        options: [
+          'SpringMVc 中必须是实现了 Handler 接口的 JavaBean 才能成为请求处理器',
+          'DisPatcherServlet 是 SpringMvc 的前端 Servlet,和任何的 servlet 一样，必须在 web. xml 中配置后，才能起作用',
+          '在 web. xm1 中，根据 servlet-mapping 的URL 不同，可以配置多个 DisPatcher Servlet',
+          'ModelAndView 中的 view是逻辑视图名，而非真正的视图对象'
+        ],
+        answer: 'A'
+      },
+      {
+        type: '单选题',
+        text: 'MyBatis的插件是通过拦截器实现。可以拦截类中的时机有四个，包括执行SQL的全过程、重写执行SQL的过程、执行SQL的参数组装、执行结果的组装。下列哪个不是配置拦截时机的参数',
+        options: ['Executor', 'ParameterHandler', 'TypeHandler', 'StatementHandler'],
+        answer: 'C'
+      },
+      {
+        type: '单选题',
+        text: 'InternalResourceViewResolve父类是',
+        options: ['UrlBasedViewResolver', 'ActionSupport', 'ActionBasedViewResolver', 'BasedViewResolverServlet'],
+        answer: 'A'
+      },
+      {
+        type: '单选题',
+        text: '与WHERE g BETWEEN 60 AND 80语句等价的子句是?',
+        options: [
+          'WHERE g > 60 and g < 80',
+          'WHERE g >= 60 and g < 80',
+          'WHERE g > 60 and g <= 80',
+          'WHERE g >= 60 and g <= 80'
+        ],
+        answer: 'D'
+      },
+      {
+        type: '单选题',
+        text: '关于WHERE与HAVING说法不正确的是?',
+        options: [
+          'WHERE条件与 HAVING 条件作用对象一致',
+          'HAVING作用于结果组',
+          'WHERE条件作用于被查询的表，从中选择满足条件的记录',
+          'HAVING子句可以单独使用'
+        ],
+        answer: 'A'
+      },
+      {
+        type: '单选题',
+        text: '内连接的语句形式为:SELECT内容FROM表1INNERJOIN表2 ON〈连接条件〉，对连接条件说法不正确的是?',
+        options: [
+          '连接条件中可以使用表名或表名别名',
+          '连接条件可以使用比较运算符，也可以使用逻辑运算符',
+          '比较运算符使用=时，称为等值连接',
+          '若两个表中有同名字段，那么在同名字段前必须加表名，但不可以使用表别名'
+        ],
+        answer: 'D'
+      },
+      {
+        type: '单选题',
+        text: '有学生表student,结构如下学号(char (9),主键)、姓名(varchar (10),非空)、性别(char (2))、出生日期(date)、民族(varchar (20))。课程表 course，结构如下课程号(char (5),主键)、课程名称(varchar (30))、课程简介(text)、学分(int)。选课信息表 SC，结构如下学号(char (9),外键)、课程号(char (5),外键)、成绩(int,check(0,100))，査询至少选修一门课程的女同学姓名，并去除重复。下列 SQL 语句哪个是正确的?',
+        options: [
+          'select 姓名 from student OUT JOIN SC on student.学号=SC.学号 WHERE student.性别 ="女"',
+          'select distinct 姓名 from student JOIN Sc on student.学号=SC.学号 WHERE student.性别 = "女"',
+          'select 姓名 from student SC on student.学号= SC.学号 WHERE student.性别 ="女"',
+          'select 姓名 from student JOIN SC WHERE student.性别="女"'
+        ],
+        answer: 'B'
+      },
+      {
+        type: '单选题',
+        text: '使用SQL语句进行插入数据时，若希望查看原表中是否有该条数据时，应该使用的关键字是?',
+        options: ['EXISTS', 'DISTINCT', 'NOT EXISTS', 'COUNT'],
+        answer: 'C'
+      },
+      {
+        type: '单选题',
+        text: '下面创建自定义函数语法的是?',
+        options: ['CREATE PROCEDURE', 'CREATE VIEW', 'CREATE FUNCTION', '以上都不是'],
+        answer: 'C'
+      },
+      {
+        type: '单选题',
+        text: '若Nginx安装到/usr/local/nginx目录下，那么网站默认根目录是()',
+        options: ['usr/local/nginx/html', 'var/www/html', 'usr/local/apache2/htdocs', 'etc/https'],
+        answer: 'A'
+      },
+      {
+        type: '单选题',
+        text: '若要VSS支持多用户检出，则需在Options->General中勾选()选项。',
+        options: [
+          'Allow multiple checkouts',
+          'Use network name for automatic user log in',
+          'Enable project security',
+          'Set read-only flag for all files'
+        ],
+        answer: 'A'
+      },
+      {
+        type: '单选题',
+        text: '使用svn status查看工作副本状态时，第一列返A代表项目()',
+        options: ['没有修改', '预定要添加的项目', '项目已经丢失', '项目不在版本控制之下'],
+        answer: 'B'
+      },
+      {
+        type: '单选题',
+        text: 'Git中以下哪项配置可以使得特定项目使用该邮箱()',
+        options: [
+          'git config -global user.name',
+          'git config -global user.email',
+          'git config user.name',
+          'git config user.email'
+        ],
+        answer: 'D'
+      },
+      {
+        type: '单选题',
+        text: '哪个日期函数用于返回指定日期时间是当月的第几天?',
+        options: ['MONTH', 'DAYOFMONTH', 'WEEK', 'DAY'],
+        answer: 'B'
+      },
+      {
+        type: '单选题',
+        text: '创建存储过程时可能会需要用到自定义语句的结束符，其关键字是?',
+        options: ['BEGIN', 'DELIMITER', 'SET', 'END'],
+        answer: 'B'
+      },
+      {
+        type: '单选题',
+        text: '存储过程在删除时，使用的关键字是?',
+        options: ['CREATE PROCEDURE', 'ALTER PROCEDURE', 'DROP PROCEDURE', 'REMOVE PROCEDURE'],
+        answer: 'C'
+      },
+      {
+        type: '单选题',
+        text: 'SQL语句查询时，可以使用哪一个关键字进行筛选?',
+        options: ['WHERE', 'GROUP BY', 'ORDER BY', 'UNION'],
+        answer: 'A'
+      },
+      {
+        type: '单选题',
+        text: '关于存储过程说法不正确的是?',
+        options: [
+          '存储过程是多条 SQL 语句的集合',
+          '存储过程可以有参数，也可以没有',
+          '存储过程可以被用户调用，也可以被 Java 或 C#等编程语言调用',
+          '存储过程每次调用时必须要重新进行编译'
+        ],
+        answer: 'D'
+      },
+      {
+        type: '单选题',
+        text: 'MyBatis框架的resultMap匹配关系映射，可以处理一对一关系、一对多关系和多对多关系，下列哪个标签用来处理一对一关系?',
+        options: ['association', 'collection', 'discriminator', 'scope'],
+        answer: 'A'
+      },
+      {
+        type: "单选题",
+        text: 'MyBatis框架动态SQL中，下列哪个标签起到处理SQL拼接问题的辅助作用?',
+        options: ['if', 'choose', 'trim', 'foreach'],
+        answer: 'C'
+      },
+      {
+        type: "单选题",
+        text: '我们在使用Tomcat部署war包的时候，是将war包存放在哪个目录，然后开始自动解压部署',
+        options: ['lib', 'conf', 'webapps', 'ROOT'],
+        answer: 'C'
+      },
+      {
+        type: "单选题",
+        text: 'Tomcat的默认端口是',
+        options: ['80', '8080', '8080#8008'],
+        answer: 'B'
+      },
+      {
+        type: "单选题",
+        text: 'VSS中若需锁定文件的某一版本，使其不再发生变化，可使用()操作',
+        options: ['Share', 'Pin', 'Merge Branch', 'Rollback'],
+        answer: 'B'
+      },
+      {
+        type: "单选题",
+        text: '下列关键字不属于多值运算符的是?',
+        options: ['IN', 'ANY', 'ALL', '='],
+        answer: 'D'
+      },
+      {
+        type: '多选题',
+        text: '有学生表Stu，有sno、sname、ssex、saddress字段，查询学生所有信息的SQL语句是?',
+        options: [
+          'SELECT * FROM Stu',
+          'SELECT sno, sname FROM Stu',
+          'SELECT sno,sname,ssex,saddress FROM Stu',
+          'SELECT Stu FROM sno,sname,ssex,saddress'
+        ],
+        answer: ['A', 'C']
+      },
+      {
+        type: '多选题',
+        text: '有学生表Stu，Sno表示学号，Sname表示姓名,Ssex表示性别，Sbirthday表示出生日期，Sdept表示所在系，那么统计各系学生数的SQL语句是?',
+        options: [
+          'SELECT Sdept,COUNT(*)AS 各系人数 FROM Stu GROUP BY Sdept',
+          'SELECT Sno, Sdept, COUNT(*)FROM Stu GROUP BY Sdept',
+          'SELECT Sdept,COUNT(Sno)AS 各系人数 FROM Stu GROUP BY Sdept',
+          'SELECT Sdept,COUNT(Sno)AS 各系人数 FROM Stu GROUP BY Sno'
+        ],
+        answer: ['A', 'C']
+      },
+      {
+        type: '多选题',
+        text: '有三个表，学生表Stu(Sno,Sname,Ssex,Sbirthdav,sdept)，字段分别表示学号，姓名，性别，出生、日期，所在系，学号为主码:课程表Course(no,Cname)字段分别表示课程号，课程名，课程号为主码，成绩表 SC(Sno,Cno,degree),字段分别表示学号，课程号，成绩，(Sno，Cno)共同为主码，分别参考 Stu，Course 表的主码。查询没有选修课程的学生信息',
+        options: [
+          'SELECT * FROM Stu WHERE Sno != SELECT Sno FROM SC',
+          'SELECT * FROM Stu WHERE Sno !=( SELECT Sno FROM SC)',
+          'SELECT * FROM Stu WHERE Sno NOT IN(SELECT Sno FROM SC)',
+          'SELECT * FROM Stu WHERE Sno NOT EXISTS (SELECT * FROM SC where Stu.Sno = SC. Sno)'
+        ],
+        answer: ['C', 'D']
+      },
+      {
+        type: '多选题',
+        text: '下列关于存储过程说法正确的是?',
+        options: [
+          'LOOP 语句和 REPEAT 语句可以控制循环',
+          '存储过程不可以修改',
+          '存储过程可以使用异常处理',
+          '在存储过程中不可以定义变量'
+        ],
+        answer: ['A', 'C']
+      },
+      {
+        type: '多选题',
+        text: 'DELIMITER S$ \nCREATE TRIGGER before products update\nBEFORE UPDATE ON products\nFOR EACH ROW\nBEGIN\nINSERT INTO price logs(product code, price )\nVALUES(old.productCode, old.msrp);\nEND $$\nDELIMITER :\n有触发器定义如上所述，下面说法正确的是',
+        options: [
+          '该触发器是在插入表 products 之前触发的',
+          '该触发器将 old 表的产品代码和价格插入到表 price logs 中',
+          '触发器的名称是 before products update',
+          '对 products 表中数据每行数据进行修改都会触发该触发器'
+        ],
+        answer: ['B', 'C', 'D']
+      },
+      {
+        type: '多选题',
+        text: '关于Gradle项目中jcenter和maven两个仓库的说法正确的是()',
+        options: [
+          'jcenter 是 JFrog 公司提供的仓库服务',
+          'maven 是 Sonatype 公司提供的仓库服务',
+          'jcenter 的优点是因为采取了 CDN 技术所以获取非常迅速',
+          'maven 的优点是仓库内容比 jcenter 要全面，在 jcenter 中找不到的内容可以在 maven 中找到'
+        ],
+        answer: ['A', 'B', 'C', 'D']
+      },
+      {
+        type: '多选题',
+        text: '关于该自定义函数说法正确的是?',
+        options: [
+          '函数中不可以使用全局变量',
+          '自定义函数可以没有返回值',
+          'SET 语句一次可以定义多个变量',
+          '函数可以有参数也可以没有参数'
+        ],
+        answer: ['C', 'D']
+      },
+      {
+        type: '多选题',
+        text: '创建触发器的名称需要遵循一定的规则，通常情况下应该表示如下：[trigger time]_[tablename]_[trigger event],那么下列命名符合规则的是',
+        options: [
+          'before student delete',
+          'now student update',
+          'after student insert',
+          'after student update'
+        ],
+        answer: ['A', 'C', 'D']
+      },
+      {
+        type: '多选题',
+        text: 'Nginx负载均衡的方式有()',
+        options: ['轮询', 'weight', 'ip hash', 'fair'],
+        answer: ['A', 'B', 'C', 'D']
+      },
+      {
+        type: '多选题',
+        text: 'VSS支持定制安装，以下属于定制安装提供的选项是()',
+        options: [
+          'Administrative Programs',
+          'Client Programs',
+          'Conversion Utilities',
+          'Create SourceSafe Database'
+        ],
+        answer: ['A', 'B', 'C', 'D']
+      },
+      {
+        type: '判断题',
+        text: '在进行内连接操作时，为防止多表同名字段的问题，可以将表名作为前缀。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: 'GREATEST 函数返回参数表中的最大值，参数可以为数值型也可以为字符串型。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '删除存储过程使用的关键字与删除表关键字相同。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '触发器可以使用SQL语句创建或在MySQL Workbench中创建。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '相对独立的程序块之间、变量说明之后加空行是符合编码规范的做法。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '方法命名采用"动作+属性"的方法，并且，动作以小写字母开始，属性以大写字母开始。例如:getName()。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '热部署是指在你修改项目的JSP、JAVA类或配置文件后，在不重启WEB服务器前提下能让修改生效。',
+        answer: '错'
+      },
+      {
+        type: '判断题',
+        text: '任何用户不管有没有权限，都可以执行Cancel search操作。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: 'SVN的客户端会根据需要自动编码URL，类似web浏览器。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '使用git tag命令查看所有标签时，标签按时间顺序倒叙排列。',
+        answer: '错'
+      },
+      {
+        type: '判断题',
+        text: 'JUnit允许只运行失败的用例。',
+        answer: '错'
+      },
+      {
+        type: '判断题',
+        text: 'Hamcrest 匹配器中allOf用于检查是否与所有包含的匹配器匹配。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: 'SELECT 语句的后面接列名时，可以对列名进行重命名，必须使用关键字AS。',
+        answer: '错'
+      },
+      {
+        type: '判断题',
+        text: 'MySQL 外连接可以使用别名，别名一旦定义，在整个查询语句中只能使用表的别名。',
+        answer: '对'
+      },
+      {
+        type: '判断题',
+        text: '触发器可以在临时表上创建，其操作方法与在基本表上一致。',
+        answer: '错'
+      }
+    ];
+
+
+    function displayQuestions(filtered = questions) {
+      const container = document.getElementById('questionContainer');
+      container.innerHTML = '';
+      filtered.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+
+        const type = document.createElement('div');
+        type.className = 'question-type';
+        type.textContent = `${index + 1}. ${q.type}`;
+
+        const text = document.createElement('div');
+        text.textContent = q.text;
+
+        card.appendChild(type);
+        card.appendChild(text);
+
+        if (q.options) {
+          const options = document.createElement('ul');
+          q.options.forEach((opt, i) => {
+            const li = document.createElement('li');
+            li.textContent = `${String.fromCharCode(65 + i)}: ${opt}`;
+            options.appendChild(li);
+          });
+          card.appendChild(options);
+        }
+
+        const answer = document.createElement('div');
+        answer.className = 'answer';
+        const answerText = Array.isArray(q.answer) ? q.answer.join('、') : q.answer;
+        answer.textContent = `正确答案：${answerText}`;
+
+        card.appendChild(answer);
+        container.appendChild(card);
+      });
+    }
+
+    function searchQuestions() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!keyword) {
+        displayQuestions();
+        return;
+      }
+
+      const filtered = questions.filter(q => {
+        if (q.text.toLowerCase().includes(keyword)) {
+          return true;
+        }
+
+        if (q.options) {
+          return q.options.some(opt => opt.toLowerCase().includes(keyword));
+        }
+
+        return false;
+      });
+
+      displayQuestions(filtered);
+    }
+
+    // 添加输入框的input事件监听
+    document.getElementById('searchInput').addEventListener('input', searchQuestions);
+
+    function closePopup() {
+      const checkbox = document.getElementById('noShowCheckbox');
+      const popup = document.getElementById('popupOverlay');
+      if (checkbox.checked) {
+        const expiration = Date.now() + 3 * 24 * 60 * 60 * 1000; // 3天有效期
+        localStorage.setItem('noShowPopupUntil', expiration.toString());
+        console.log("设置不再提示，保存时间戳：", expiration);
+      }
+      popup.style.display = 'none';
+    }
+
+    function shouldShowPopup() {
+      const saved = localStorage.getItem('noShowPopupUntil');
+      const now = Date.now();
+      console.log("当前时间戳：", now);
+      console.log("保存的时间戳：", saved);
+      return !saved || parseInt(saved) < now;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      displayQuestions();
+
+      // 判断是否弹出
+      if (shouldShowPopup()) {
+        document.getElementById('popupOverlay').style.display = 'flex';
+      } else {
+        document.getElementById('popupOverlay').style.display = 'none';
+      }
+    });
+  </script>
+
+</body>
+
+</html>
